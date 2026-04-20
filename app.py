@@ -4,13 +4,17 @@ from PIL import Image
 import tflite_runtime.interpreter as tflite
 
 # ======================
-# LOAD MODEL
+# LOAD TFLITE MODEL
 # ======================
-model = tf.keras.models.load_model("mobilenet_banana.h5")
+interpreter = tflite.Interpreter(model_path="banana_model.tflite")
+interpreter.allocate_tensors()
+
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
 
 class_names = ["Overripe", "Ripe", "Rotten", "Unripe"]
 
-st.title("🍌 Klasifikasi Kematangan Pisang")
+st.title("🍌 Klasifikasi Kematangan Pisang (TFLite)")
 
 option = st.radio("Pilih input", ["Upload", "Kamera"])
 
@@ -35,21 +39,22 @@ if image is not None:
     st.image(image, use_container_width=True)
 
     # ======================
-    # PREPROCESSING
+    # PREPROCESS
     # ======================
     img = image.convert("RGB").resize((224,224))
-    img_array = np.array(img) / 255.0
-    img_array = np.expand_dims(img_array, axis=0)
+    img = np.array(img, dtype=np.float32) / 255.0
+    img = np.expand_dims(img, axis=0)
 
     # ======================
-    # PREDIKSI
+    # INFERENSI TFLITE
     # ======================
-    prediction = model.predict(img_array)
-    hasil = class_names[np.argmax(prediction)]
-    confidence = np.max(prediction) * 100
+    interpreter.set_tensor(input_details[0]['index'], img)
+    interpreter.invoke()
 
-    # ======================
-    # OUTPUT
-    # ======================
+    output = interpreter.get_tensor(output_details[0]['index'])
+
+    hasil = class_names[np.argmax(output)]
+    confidence = np.max(output) * 100
+
     st.success(f"Hasil: {hasil}")
     st.info(f"Confidence: {confidence:.2f}%")
