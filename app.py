@@ -6,7 +6,9 @@ import tensorflow as tf
 # ======================
 # LOAD MODEL
 # ======================
-model = tf.keras.models.load_model("mobilenet_banana.h5")
+# model = tf.keras.models.load_model("mobilenet_banana.h5")
+model = tf.keras.models.load_model("mobilenet_banana.h5", compile=False)
+
 
 class_names = ["Overripe", "Ripe", "Rotten", "Unripe"]
 
